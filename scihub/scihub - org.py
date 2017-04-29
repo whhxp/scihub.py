@@ -27,7 +27,7 @@ HEADERS = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:27.0) Gecko/2010010
 
 class SciHub(object):
     """
-    SciHub class can search for papers on Google Scholars
+    SciHub class can search for papers on Google Scholars 
     and fetch/download papers from sci-hub.io
     """
     def __init__(self):
@@ -51,33 +51,33 @@ class SciHub(object):
 
             s = self._get_soup(res.content)
             papers = s.find_all('div', class_="gs_r")
-
+            
             if not papers:
                 if 'CaptchaRedirect' in res.content:
                     results['err'] = 'Failed to complete search with query %s (captcha)' % query
                 return results
-
+            
             for paper in papers:
                 if not paper.find('table'):
                     source = None
                     pdf = paper.find('div', class_='gs_ggs gs_fl')
                     link = paper.find('h3', class_='gs_rt')
-
+                    
                     if pdf:
                         source = pdf.find('a')['href']
                     elif link.find('a'):
                         source = link.find('a')['href']
                     else:
                         continue
-
+                    
                     results['papers'].append({
                         'name': link.text,
                         'url': source
                     })
-
+                    
                     if len(results['papers']) >= limit:
                         return results
-
+            
             start += 10
 
     def download(self, identifier, destination='', path=None):
@@ -89,9 +89,9 @@ class SciHub(object):
         data = self.fetch(identifier)
 
         if not 'err' in data:
-            self._save(data['pdf'],
+            self._save(data['pdf'], 
                        os.path.join(destination, path if path else data['name']))
-
+        
         return data
 
     def fetch(self, identifier):
@@ -101,9 +101,9 @@ class SciHub(object):
         to access and download paper. Otherwise, just download paper directly.
         """
         url = self._get_direct_url(identifier)
-        print(url)
+
         try:
-            # verify=False is dangerous but sci-hub.io
+            # verify=False is dangerous but sci-hub.io 
             # requires intermediate certificates to verify
             # and requests doesn't know how to download them.
             # as a hacky fix, you can add them to your store
@@ -112,7 +112,7 @@ class SciHub(object):
 
             if res.headers['Content-Type'] != 'application/pdf':
                 return {
-                    'err': 'Failed to fetch pdf with identifier %s (resolved url %s) due to captcha'
+                    'err': 'Failed to fetch pdf with identifier %s (resolved url %s) due to captcha' 
                        % (identifier, url)
                 }
             else:
@@ -125,7 +125,7 @@ class SciHub(object):
         except requests.exceptions.RequestException as e:
 
             return {
-                'err': 'Failed to fetch pdf with identifier %s (resolved url %s) due to request exception.'
+                'err': 'Failed to fetch pdf with identifier %s (resolved url %s) due to request exception.' 
                    % (identifier, url)
             }
 
@@ -134,7 +134,6 @@ class SciHub(object):
         Finds the direct source url for a given identifier.
         """
         id_type = self._classify(identifier)
-        print(id_type)
 
         return identifier if id_type == 'url-direct' \
                 else self._search_direct_url(identifier)
@@ -146,9 +145,7 @@ class SciHub(object):
         """
         res = requests.get(SCIHUB_BASE_URL + identifier, headers=HEADERS, verify=False)
         s = self._get_soup(res.content)
-
         iframe = s.find('iframe')
-        # print(iframe)
         if iframe:
             return iframe.get('src') if not iframe.get('src').startswith('//') \
                else 'http:' + iframe.get('src')
@@ -186,7 +183,7 @@ class SciHub(object):
 
     def _generate_name(self, res):
         """
-        Generate unique filename for paper. Returns a name by calcuating
+        Generate unique filename for paper. Returns a name by calcuating 
         md5 hash of file contents, then appending the last 20 characters
         of the url which typically provides a good paper identifier.
         """
@@ -199,7 +196,6 @@ def main():
 
     logging.basicConfig()
     logger = logging.getLogger('Sci-Hub')
-    logger.setLevel(logging.DEBUG)
 
     parser = argparse.ArgumentParser(description='SciHub - To remove all barriers in the way of science.')
     parser.add_argument('-d', '--download', metavar='(DOI|PMID|URL)', help='tries to find and download the paper', type=str)
@@ -209,7 +205,7 @@ def main():
     parser.add_argument('-l', '--limit', metavar='N', help='the number of search results to limit to', default=10, type=int)
     parser.add_argument('-o', '--output', metavar='path', help='directory to store papers', default='', type=str)
     parser.add_argument('-v', '--verbose', help='increase output verbosity', action='store_true')
-
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -227,7 +223,7 @@ def main():
             logger.debug('%s', results['err'])
         else:
             logger.debug('Successfully completed search with query %s', args.search)
-        print (results)
+        print results
     elif args.search_download:
         results = sh.search(args.search_download, args.limit)
         if 'err' in results:
