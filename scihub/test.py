@@ -1,3 +1,4 @@
+python scihub.py -d 10.1002/2015WR017349
 # from scihub import SciHub
 
 # sh = SciHub()
